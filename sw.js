@@ -4,7 +4,7 @@
  * Version bump = change CACHE_NAME to force update.
  */
 
-const CACHE_NAME = 'grow-kings-v3';
+const CACHE_NAME = 'grow-kings-v5';
 const OFFLINE_FALLBACK = './';
 
 // Core assets to precache (populated at install)
