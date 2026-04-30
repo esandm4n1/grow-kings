@@ -24,6 +24,31 @@
   <body>
     <div id="root"></div>
 
+    <!-- 恐竜モードへの導線 -->
+    <a href="./dino.html" id="dino-link" style="
+      position: fixed;
+      right: 12px;
+      bottom: 80px;
+      z-index: 9999;
+      background: linear-gradient(135deg, #FFC83A, #cc9922);
+      color: #000;
+      padding: 10px 14px;
+      border-radius: 24px;
+      text-decoration: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+      font-size: 13px;
+      font-weight: bold;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 12px rgba(255,200,58,0.4);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.15s;
+    " onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)'">
+      <span style="font-size:18px;">🦖</span>
+      <span>恐竜モード</span>
+    </a>
+
     <!-- Register service worker for PWA (offline support) -->
     <script>
       if ('serviceWorker' in navigator) {
