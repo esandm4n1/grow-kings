@@ -24,40 +24,6 @@
   <body>
     <div id="root"></div>
 
-    <!-- 恐竜モードへの導線（画面上部に大きく配置） -->
-    <a href="./dino.html" id="dino-link" style="
-      position: fixed;
-      top: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 99999;
-      background: linear-gradient(135deg, #FFC83A 0%, #FF8800 100%);
-      color: #000;
-      padding: 10px 20px;
-      border-radius: 30px;
-      text-decoration: none;
-      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
-      font-size: 14px;
-      font-weight: bold;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 16px rgba(255,200,58,0.6);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      -webkit-tap-highlight-color: transparent;
-      border: 2px solid rgba(255,255,255,0.3);
-      animation: dinoPulse 2s ease-in-out infinite;
-      white-space: nowrap;
-    " onmousedown="this.style.transform='translateX(-50%) scale(0.95)'" onmouseup="this.style.transform='translateX(-50%) scale(1)'" ontouchstart="this.style.transform='translateX(-50%) scale(0.95)'" ontouchend="this.style.transform='translateX(-50%) scale(1)'">
-      <span style="font-size:20px;">🦖</span>
-      <span>恐竜モード</span>
-    </a>
-    <style>
-      @keyframes dinoPulse {
-        0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 16px rgba(255,200,58,0.6); }
-        50% { box-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 24px rgba(255,200,58,1); }
-      }
-    </style>
-
     <!-- Register service worker for PWA (offline support) -->
     <script>
       if ('serviceWorker' in navigator) {
@@ -74,8 +40,11 @@
         const a = document.createElement('a');
         a.id = 'dino-link';
         a.href = './dino.html';
-        a.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:99999;background:linear-gradient(135deg,#FFC83A 0%,#FF8800 100%);color:#000;padding:10px 20px;border-radius:30px;text-decoration:none;font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;font-weight:bold;box-shadow:0 4px 16px rgba(0,0,0,0.6),0 0 16px rgba(255,200,58,0.6);display:flex;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;border:2px solid rgba(255,255,255,0.3);animation:dinoPulse 2s ease-in-out infinite;white-space:nowrap;';
-        a.innerHTML = '<span style="font-size:20px;">🦖</span><span>恐竜モード</span>';
+        a.title = '恐竜モード';
+        a.style.cssText = 'position:fixed;top:14px;right:54px;z-index:99999;width:32px;height:32px;border-radius:50%;background:rgba(255,200,58,0.15);border:1px solid rgba(255,200,58,0.4);display:flex;align-items:center;justify-content:center;text-decoration:none;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(4px);transition:all 0.2s;';
+        a.innerHTML = '<span style="font-size:18px;line-height:1;">🦖</span>';
+        a.onmouseenter = () => { a.style.background = 'rgba(255,200,58,0.3)'; a.style.transform = 'scale(1.1)'; };
+        a.onmouseleave = () => { a.style.background = 'rgba(255,200,58,0.15)'; a.style.transform = 'scale(1)'; };
         document.body.appendChild(a);
       }
       
