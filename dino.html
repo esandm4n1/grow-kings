@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0A0A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>DINO · FUKUI KINGS</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans',sans-serif;}
+:root{--bg:#0A0A0A;--panel:#1A1A1A;--panel2:#252525;--gold:#FFC83A;--red:#D32027;--blue:#1E5FBF;--green:#2E8B3E;--text:#FFFFFF;--dim:#999;}
+html,body{background:var(--bg);color:var(--text);min-height:100vh;}
+body{max-width:480px;margin:0 auto;padding:0 0 70px;position:relative;overflow-x:hidden;}
+.header{background:linear-gradient(180deg,#1A0505,var(--bg));padding:14px 20px 10px;text-align:center;border-bottom:1px solid #2a1a1a;}
+.header h1{font-size:13px;color:var(--gold);letter-spacing:2px;font-weight:bold;}
+.header .sub{font-size:9px;color:var(--dim);margin-top:2px;letter-spacing:1px;}
+.nav{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:var(--panel);border-top:1px solid #333;display:flex;z-index:100;}
+.nav button{flex:1;background:transparent;border:none;color:var(--dim);padding:8px 4px;font-size:10px;cursor:pointer;}
+.nav button.active{color:var(--gold);}
+.nav button .ic{display:block;font-size:20px;margin-bottom:2px;}
+.page{display:none;padding:14px;}
+.page.active{display:block;}
+.stage{background:linear-gradient(180deg,#0F0F1F 0%,#1A1A2A 60%,#2A2A1F 100%);border-radius:16px;padding:18px 14px 14px;text-align:center;position:relative;overflow:hidden;min-height:300px;}
+.stage::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center bottom,rgba(255,200,58,.12),transparent 60%);pointer-events:none;}
+.dino-img{width:200px;height:200px;image-rendering:pixelated;margin:0 auto;display:block;position:relative;z-index:2;animation:bounce 2s ease-in-out infinite;}
+@keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.crown-overlay{position:absolute;top:8px;right:14px;width:48px;height:48px;image-rendering:pixelated;z-index:3;display:none;}
+.crown-indicator{position:absolute;top:10px;right:14px;background:rgba(0,0,0,0.6);border:1px solid var(--gold);border-radius:14px;padding:3px 8px 3px 5px;display:flex;align-items:center;z-index:3;}
+.name-plate{margin:8px auto 0;background:rgba(0,0,0,.5);border:1px solid var(--gold);border-radius:20px;padding:5px 14px;display:inline-block;font-size:12px;color:var(--gold);font-weight:bold;}
+.type-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:bold;margin-top:8px;}
+.type-tyrano{background:var(--red);color:#fff;}
+.type-raptor{background:var(--blue);color:#fff;}
+.type-venator{background:var(--green);color:#fff;}
+.type-unknown{background:#555;color:#ccc;}
+.level-bar{margin-top:14px;background:rgba(0,0,0,.4);border-radius:4px;height:7px;overflow:hidden;border:1px solid #444;}
+.level-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),#FFE889);transition:width .6s;box-shadow:0 0 8px var(--gold);}
+.level-info{display:flex;justify-content:space-between;margin-top:3px;font-size:10px;color:var(--dim);}
+.stats-grid{margin-top:14px;background:var(--panel);border-radius:12px;padding:12px;}
+.stats-grid h3{font-size:11px;color:var(--dim);margin-bottom:8px;letter-spacing:1px;}
+.stat-row{display:flex;align-items:center;margin-bottom:5px;}
+.stat-name{width:78px;font-size:11px;color:#ccc;}
+.stat-bar{flex:1;background:#333;border-radius:3px;height:6px;overflow:hidden;}
+.stat-bar-fill{height:100%;transition:width .5s;}
+.s-shoot{background:linear-gradient(90deg,#ff6666,#D32027);}
+.s-speed{background:linear-gradient(90deg,#6699ff,#1E5FBF);}
+.s-pass{background:linear-gradient(90deg,#66ff99,#2E8B3E);}
+.s-defense{background:linear-gradient(90deg,#ff9966,#cc6633);}
+.s-mental{background:linear-gradient(90deg,#ff66ff,#9933cc);}
+.stat-num{width:32px;text-align:right;font-size:11px;color:#ccc;margin-left:6px;}
+.actions{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.btn{background:var(--panel);border:1px solid #333;color:var(--text);padding:13px 6px;border-radius:10px;font-size:13px;cursor:pointer;transition:all .15s;text-align:center;}
+.btn:active{transform:scale(.96);background:var(--panel2);}
+.btn .ico{font-size:20px;display:block;margin-bottom:2px;}
+.btn-primary{background:linear-gradient(135deg,var(--gold),#cc9922);color:#000;border-color:var(--gold);font-weight:bold;}
+.q-card{background:var(--panel);border-radius:12px;padding:16px;margin-bottom:10px;}
+.q-card .speaker{display:flex;align-items:center;margin-bottom:8px;font-size:12px;color:var(--gold);}
+.q-card .speaker img{width:32px;height:32px;image-rendering:pixelated;margin-right:8px;}
+.q-card .q{font-size:14px;margin-bottom:12px;line-height:1.5;}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.opts.three{grid-template-columns:1fr 1fr 1fr;}
+.opt{background:var(--panel2);border:1px solid #444;color:var(--text);padding:11px 6px;border-radius:8px;font-size:13px;cursor:pointer;}
+.opt:active{background:#333;}
+.opt.sel{background:var(--gold);color:#000;border-color:var(--gold);font-weight:bold;}
+.opt.small{font-size:11px;padding:9px 4px;}
+.input{background:var(--panel2);border:1px solid #444;color:var(--text);padding:11px;border-radius:8px;font-size:14px;width:100%;font-family:inherit;}
+.input.center{text-align:center;font-size:18px;}
+textarea.input{resize:vertical;min-height:60px;}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;justify-content:center;align-items:center;padding:20px;}
+.modal.show{display:flex;}
+.mc{background:linear-gradient(180deg,#2a1a0a,var(--panel));border:2px solid var(--gold);border-radius:16px;padding:20px;max-width:340px;width:100%;text-align:center;box-shadow:0 0 40px rgba(255,200,58,.5);animation:pop .5s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop{0%{transform:scale(.7);opacity:0;}100%{transform:scale(1);opacity:1;}}
+.mc h2{color:var(--gold);font-size:18px;margin-bottom:10px;}
+.mc img{width:160px;height:160px;image-rendering:pixelated;margin:8px auto;display:block;}
+.mc p{font-size:13px;color:#ddd;margin-bottom:14px;line-height:1.6;white-space:pre-line;}
+.mc button{background:var(--gold);color:#000;border:none;padding:11px 28px;border-radius:22px;font-weight:bold;font-size:14px;cursor:pointer;}
+.history-item{background:var(--panel);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;font-size:12px;align-items:center;}
+.history-item .date{color:var(--dim);font-size:11px;}
+.history-item .ty{color:var(--gold);}
+.history-item .detail{flex:1;}
+.empty{text-align:center;color:var(--dim);padding:30px 16px;font-size:13px;}
+.set-row{background:var(--panel);border-radius:8px;padding:11px 12px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;}
+.set-row .label{font-size:13px;}
+.set-row .val{color:var(--gold);font-size:12px;}
+.set-row input{background:var(--panel2);border:1px solid #444;color:#fff;padding:5px 8px;border-radius:5px;font-size:13px;}
+.danger{background:#3a0a0a;color:#ff8888;border:1px solid #663333;padding:11px;border-radius:8px;width:100%;margin-top:14px;font-size:12px;cursor:pointer;}
+.penta-card{background:var(--panel);border-radius:12px;padding:14px;margin-bottom:10px;}
+.penta-card h3{font-size:13px;color:var(--gold);margin-bottom:8px;text-align:center;}
+.penta-svg{width:100%;max-width:280px;margin:0 auto;display:block;}
+.penta-legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:10px;}
+.penta-legend span{display:flex;align-items:center;gap:4px;}
+.penta-legend .dot{width:10px;height:10px;border-radius:50%;}
+.slider-row{margin-bottom:10px;}
+.slider-row label{display:flex;justify-content:space-between;font-size:12px;color:#ccc;margin-bottom:4px;}
+.slider-row label .v{color:var(--gold);font-weight:bold;}
+.slider-row input[type=range]{width:100%;-webkit-appearance:none;appearance:none;background:transparent;}
+.slider-row input[type=range]::-webkit-slider-runnable-track{height:6px;background:#333;border-radius:3px;}
+.slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);margin-top:-6px;cursor:pointer;}
+.slider-row input[type=range]::-moz-range-track{height:6px;background:#333;border-radius:3px;}
+.slider-row input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;}
+.crown-rank{display:flex;align-items:center;gap:8px;margin-top:8px;justify-content:center;}
+.crown-rank img{width:32px;height:32px;image-rendering:pixelated;}
+.crown-rank .label{font-size:11px;color:var(--gold);}
+.tip{background:rgba(255,200,58,.08);border-left:3px solid var(--gold);padding:8px 10px;border-radius:4px;font-size:12px;color:#ddd;margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🦖 DINO · FUKUI KINGS</h1>
+  <div class="sub">NEVER GIVE UP</div>
+</div>
+
+<!-- メイン -->
+<div class="page active" id="p-main">
+  <div class="stage">
+    <img class="crown-overlay" id="crown-img" src="" alt="" style="display:none">
+    <div class="crown-indicator" id="crown-indicator" style="display:none"></div>
+    <img class="dino-img" id="dino-img" src="dino_assets/tyrano_01_egg.png">
+    <div class="name-plate" id="name-plate">タマゴ</div>
+    <div><span class="type-badge type-unknown" id="type-badge">タイプ未判定</span></div>
+    <div class="level-bar"><div class="level-bar-fill" id="level-fill" style="width:0%"></div></div>
+    <div class="level-info"><span id="level-label">Lv.1</span><span id="level-progress">0/5</span></div>
+  </div>
+
+  <div class="stats-grid">
+    <h3>STATUS</h3>
+    <div class="stat-row"><div class="stat-name">🎯 SHOOT</div><div class="stat-bar"><div class="stat-bar-fill s-shoot" id="b-shoot" style="width:0%"></div></div><div class="stat-num" id="n-shoot">0</div></div>
+    <div class="stat-row"><div class="stat-name">⚡ SPEED</div><div class="stat-bar"><div class="stat-bar-fill s-speed" id="b-speed" style="width:0%"></div></div><div class="stat-num" id="n-speed">0</div></div>
+    <div class="stat-row"><div class="stat-name">🤝 PASS</div><div class="stat-bar"><div class="stat-bar-fill s-pass" id="b-pass" style="width:0%"></div></div><div class="stat-num" id="n-pass">0</div></div>
+    <div class="stat-row"><div class="stat-name">🛡 DEFENSE</div><div class="stat-bar"><div class="stat-bar-fill s-defense" id="b-defense" style="width:0%"></div></div><div class="stat-num" id="n-defense">0</div></div>
+    <div class="stat-row"><div class="stat-name">🔥 MENTAL</div><div class="stat-bar"><div class="stat-bar-fill s-mental" id="b-mental" style="width:0%"></div></div><div class="stat-num" id="n-mental">0</div></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="startRecord('practice')"><span class="ico">🏀</span>練習</button>
+    <button class="btn btn-primary" onclick="startRecord('game')"><span class="ico">🏆</span>試合</button>
+    <button class="btn" onclick="goPage('penta')"><span class="ico">📊</span>自己評価</button>
+    <button class="btn" onclick="startScout()"><span class="ico">🔍</span>偵察</button>
+  </div>
+</div>
+
+<!-- 記録 -->
+<div class="page" id="p-record"><div id="record-flow"></div></div>
+
+<!-- ペンタグラフ -->
+<div class="page" id="p-penta">
+  <div class="penta-card">
+    <h3>📊 ペンタグラフ</h3>
+    <svg class="penta-svg" id="penta-svg" viewBox="0 0 280 240"></svg>
+    <div class="penta-legend">
+      <span><span class="dot" style="background:var(--gold)"></span>自分の評価</span>
+      <span><span class="dot" style="background:#88BBFF"></span>記録から</span>
+    </div>
+  </div>
+  <div class="penta-card">
+    <h3>自分はどんなプレイヤー？</h3>
+    <div class="tip">5段階で自分を評価してみよう。記録の結果と比べて、ズレを見つけるのが大事。</div>
+    <div id="penta-input" style="margin-top:12px"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveSelfPenta()">保存</button>
+  </div>
+</div>
+
+<!-- 履歴 -->
+<div class="page" id="p-history">
+  <h2 style="font-size:14px;color:var(--gold);margin-bottom:10px">📋 記録の履歴</h2>
+  <div id="history-list"></div>
+</div>
+
+<!-- 設定 -->
+<div class="page" id="p-settings">
+  <h2 style="font-size:14px;color:var(--gold);margin-bottom:10px">⚙ 設定</h2>
+  <div class="set-row"><div class="label">名前</div><input type="text" id="s-name" placeholder="名前"></div>
+  <div class="set-row"><div class="label">背番号</div><input type="number" id="s-number" placeholder="-" style="width:60px"></div>
+  <div class="set-row"><div class="label">記録した数</div><div class="val" id="s-records">0</div></div>
+  <div class="set-row"><div class="label">使い始めた日</div><div class="val" id="s-start">-</div></div>
+  <div class="set-row"><div class="label">恐竜のタイプ</div><div class="val" id="s-type">未判定</div></div>
+  <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="saveSettings()">名前と背番号を保存</button>
+  
+  <div style="margin-top:24px">
+    <h3 style="font-size:12px;color:var(--dim);margin-bottom:8px">獲得した王冠</h3>
+    <div id="crown-collection" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div>
+  </div>
+  
+  <button class="danger" onclick="resetData()">🦖 全データをリセット（最初から）</button>
+</div>
+
+<div class="nav">
+  <button id="nav-main" class="active" onclick="goPage('main')"><span class="ic">🦖</span>メイン</button>
+  <button id="nav-penta" onclick="goPage('penta')"><span class="ic">📊</span>評価</button>
+  <button id="nav-history" onclick="goPage('history')"><span class="ic">📋</span>履歴</button>
+  <button id="nav-settings" onclick="goPage('settings')"><span class="ic">⚙</span>設定</button>
+</div>
+
+<!-- モーダル -->
+<div class="modal" id="modal">
+  <div class="mc">
+    <h2 id="m-title"></h2>
+    <img id="m-img" src="" alt="">
+    <p id="m-text"></p>
+    <button onclick="closeModal()">OK!</button>
+  </div>
+</div>
+
+<script src="dino_app.js"></script>
+</body>
+</html>
