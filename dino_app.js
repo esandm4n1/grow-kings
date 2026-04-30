@@ -199,19 +199,17 @@ function render() {
   renderHistory();
   
   // 設定
-  document.getElementById('s-name').value = data.name;
-  document.getElementById('s-number').value = data.number;
   document.getElementById('s-records').textContent = data.records.length;
   document.getElementById('s-start').textContent = data.startDate;
   document.getElementById('s-type').textContent = data.type ? TYPE_INFO[data.type].jp : '未判定';
   
-  // 王冠コレクション
+  // 王冠コレクション（枠なし、獲得済みは光る、未獲得は灰色）
   const cc = document.getElementById('crown-collection');
   cc.innerHTML = CROWN_TIERS.map(t => {
     const got = data.crownsEarned.includes(t.img);
-    return `<div style="background:${got?'rgba(255,200,58,.1)':'#222'};padding:8px 4px;border-radius:6px;text-align:center;border:1px solid ${got?'var(--gold)':'#333'};">
-      <img src="dino_assets/${t.img}" style="width:48px;height:48px;image-rendering:pixelated;display:block;margin:0 auto;${got?'':'filter:grayscale(1) brightness(.4);'}">
-      <div style="font-size:9px;color:${got?'var(--gold)':'var(--dim)'};margin-top:2px">${got ? t.name : t.records+'回'}</div>
+    return `<div style="padding:6px 4px;text-align:center;">
+      <img src="dino_assets/${t.img}" style="width:56px;height:56px;image-rendering:pixelated;display:block;margin:0 auto;${got?'filter:drop-shadow(0 0 6px rgba(255,200,58,0.6));':'filter:grayscale(1) brightness(.35) opacity(.5);'}">
+      <div style="font-size:10px;color:${got?'var(--gold)':'var(--dim)'};margin-top:4px;font-weight:${got?'bold':'normal'};">${got ? t.name : t.records+'回'}</div>
     </div>`;
   }).join('');
 }
@@ -315,7 +313,7 @@ function renderStep(step) {
   if (step >= steps.length) { finishRecord(); return; }
   
   const s = steps[step];
-  let speakerLabel = cur.type === 'scout' ? '偵察タイム！' : ((data.name||'きみ') + 'の恐竜');
+  let speakerLabel = cur.type === 'scout' ? '偵察タイム！' : 'キミの恐竜';
   
   let html = `<div class="q-card">
     <div class="speaker"><img src="${getDinoImage()}"><span>${speakerLabel}</span></div>
@@ -519,14 +517,6 @@ function saveSelfPenta() {
 // ============================================
 // 設定
 // ============================================
-function saveSettings() {
-  data.name = document.getElementById('s-name').value;
-  data.number = document.getElementById('s-number').value;
-  saveData();
-  alert('保存したよ！');
-  render();
-}
-
 function resetData() {
   if (!confirm('本当に全部リセットしていい？\n記録もタイプも消えちゃうよ。')) return;
   if (!confirm('もう一度確認！\nすべてのデータが消えます。本当に？')) return;
