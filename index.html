@@ -14,72 +14,7 @@
     <link rel="icon" type="image/png" href="./icon-192.png" />
     <script type="module" crossorigin src="./assets/index-BNg0DJea.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-C5s8qkv-.css">
-    <style>
-      /* 恐竜カードバナー */
-      #dino-banner {
-        position: fixed;
-        bottom: 80px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: calc(100% - 32px);
-        max-width: 448px;
-        z-index: 99999;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: linear-gradient(135deg, #1a0505, #0a0a1a);
-        border: 1.5px solid rgba(255, 200, 58, 0.7);
-        border-radius: 14px;
-        padding: 12px 16px;
-        color: #FFC83A;
-        font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
-        box-shadow: 0 4px 20px rgba(255, 200, 58, 0.15);
-        -webkit-tap-highlight-color: transparent;
-        transition: all 0.15s;
-      }
-      #dino-banner:active {
-        transform: translateX(-50%) scale(0.97);
-      }
-      #dino-banner .dino-banner-icon {
-        font-size: 32px;
-        flex-shrink: 0;
-        line-height: 1;
-      }
-      #dino-banner .dino-banner-texts {
-        flex: 1;
-      }
-      #dino-banner .dino-banner-title {
-        font-size: 14px;
-        font-weight: bold;
-        color: #FFC83A;
-        letter-spacing: 0.5px;
-      }
-      #dino-banner .dino-banner-sub {
-        font-size: 11px;
-        color: #888;
-        margin-top: 2px;
-      }
-      #dino-banner .dino-banner-arrow {
-        font-size: 20px;
-        color: rgba(255, 200, 58, 0.6);
-        flex-shrink: 0;
-      }
-      /* 閉じるボタン */
-      #dino-banner-close {
-        position: absolute;
-        top: 6px;
-        right: 8px;
-        background: none;
-        border: none;
-        color: #555;
-        font-size: 16px;
-        cursor: pointer;
-        padding: 2px 4px;
-        line-height: 1;
-        -webkit-tap-highlight-color: transparent;
-      }
-    </style>
+
   </head>
   <body>
     <div id="root"></div>
@@ -88,7 +23,6 @@
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js').then(reg => {
-            // 新しいSWが待機状態になったら即適用してリロード
             reg.addEventListener('updatefound', () => {
               const newWorker = reg.installing;
               newWorker.addEventListener('statechange', () => {
@@ -100,78 +34,11 @@
           }).catch(err => {
             console.log('SW registration failed:', err);
           });
-          // 既にSWが動いてて新バージョンに切り替わったときもリロード
           navigator.serviceWorker.addEventListener('controllerchange', () => {
             window.location.reload();
           });
         });
       }
-
-      // 恐竜カードバナー — ホーム画面のみ表示
-      function isHomePage() {
-        const path = location.pathname.replace(/\/$/, '');
-        const hash = location.hash;
-        // パスがルート or /grow-kings、ハッシュが空 or #/ or #/home
-        const rootPaths = ['', '/grow-kings', '/grow-kings/index.html'];
-        const homeHashes = ['', '#/', '#/home', '#/きろく', '#!/'];
-        const pathOk = rootPaths.some(p => path.endsWith(p));
-        const hashOk = homeHashes.includes(hash) || hash === '';
-        return pathOk && hashOk;
-      }
-
-      function updateBanner() {
-        const banner = document.getElementById('dino-banner');
-        if (sessionStorage.getItem('dino-banner-closed')) {
-          if (banner) banner.remove();
-          return;
-        }
-        if (isHomePage()) {
-          if (!banner) createDinoBanner();
-        } else {
-          if (banner) banner.style.display = 'none';
-        }
-      }
-
-      function createDinoBanner() {
-        if (document.getElementById('dino-banner')) return;
-        const a = document.createElement('a');
-        a.id = 'dino-banner';
-        a.href = './dino.html';
-        a.innerHTML = `
-          <span class="dino-banner-icon">🦖</span>
-          <div class="dino-banner-texts">
-            <div class="dino-banner-title">恐竜モードで遊ぶ</div>
-            <div class="dino-banner-sub">記録すると恐竜が育つ！タイプ判定あり</div>
-          </div>
-          <span class="dino-banner-arrow">›</span>
-          <button id="dino-banner-close" title="閉じる">✕</button>
-        `;
-        a.querySelector('#dino-banner-close').addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          sessionStorage.setItem('dino-banner-closed', '1');
-          a.remove();
-        });
-        document.body.appendChild(a);
-      }
-
-      window.addEventListener('load', () => {
-        setTimeout(updateBanner, 800);
-        // Reactのルーティング変化を監視（hashchange + popstate）
-        window.addEventListener('hashchange', updateBanner);
-        window.addEventListener('popstate', updateBanner);
-        // React Router等のpushState監視
-        const origPush = history.pushState.bind(history);
-        history.pushState = function(...args) {
-          origPush(...args);
-          setTimeout(updateBanner, 100);
-        };
-        const origReplace = history.replaceState.bind(history);
-        history.replaceState = function(...args) {
-          origReplace(...args);
-          setTimeout(updateBanner, 100);
-        };
-      });
     </script>
   </body>
 </html>
