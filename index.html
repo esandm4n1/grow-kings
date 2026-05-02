@@ -87,19 +87,53 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(err => {
-            console.log('SW registration failed:', err)
-          })
-        })
+          navigator.serviceWorker.register('./sw.js').then(reg => {
+            // 新しいSWが待機状態になったら即適用してリロード
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+                  window.location.reload();
+                }
+              });
+            });
+          }).catch(err => {
+            console.log('SW registration failed:', err);
+          });
+          // 既にSWが動いてて新バージョンに切り替わったときもリロード
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+          });
+        });
       }
 
-      // 恐竜カードバナーを生成
-      function ensureDinoBanner() {
+      // 恐竜カードバナー — ホーム画面のみ表示
+      function isHomePage() {
+        const path = location.pathname.replace(/\/$/, '');
+        const hash = location.hash;
+        // パスがルート or /grow-kings、ハッシュが空 or #/ or #/home
+        const rootPaths = ['', '/grow-kings', '/grow-kings/index.html'];
+        const homeHashes = ['', '#/', '#/home', '#/きろく', '#!/'];
+        const pathOk = rootPaths.some(p => path.endsWith(p));
+        const hashOk = homeHashes.includes(hash) || hash === '';
+        return pathOk && hashOk;
+      }
+
+      function updateBanner() {
+        const banner = document.getElementById('dino-banner');
+        if (sessionStorage.getItem('dino-banner-closed')) {
+          if (banner) banner.remove();
+          return;
+        }
+        if (isHomePage()) {
+          if (!banner) createDinoBanner();
+        } else {
+          if (banner) banner.style.display = 'none';
+        }
+      }
+
+      function createDinoBanner() {
         if (document.getElementById('dino-banner')) return;
-
-        // セッション中に閉じた場合は表示しない
-        if (sessionStorage.getItem('dino-banner-closed')) return;
-
         const a = document.createElement('a');
         a.id = 'dino-banner';
         a.href = './dino.html';
@@ -112,22 +146,31 @@
           <span class="dino-banner-arrow">›</span>
           <button id="dino-banner-close" title="閉じる">✕</button>
         `;
-
-        // 閉じるボタン
         a.querySelector('#dino-banner-close').addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           sessionStorage.setItem('dino-banner-closed', '1');
-          const banner = document.getElementById('dino-banner');
-          if (banner) banner.remove();
+          a.remove();
         });
-
         document.body.appendChild(a);
       }
 
       window.addEventListener('load', () => {
-        // Reactのマウント完了を少し待ってから挿入
-        setTimeout(ensureDinoBanner, 800);
+        setTimeout(updateBanner, 800);
+        // Reactのルーティング変化を監視（hashchange + popstate）
+        window.addEventListener('hashchange', updateBanner);
+        window.addEventListener('popstate', updateBanner);
+        // React Router等のpushState監視
+        const origPush = history.pushState.bind(history);
+        history.pushState = function(...args) {
+          origPush(...args);
+          setTimeout(updateBanner, 100);
+        };
+        const origReplace = history.replaceState.bind(history);
+        history.replaceState = function(...args) {
+          origReplace(...args);
+          setTimeout(updateBanner, 100);
+        };
       });
     </script>
   </body>
