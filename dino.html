@@ -168,6 +168,7 @@ textarea.input{resize:vertical;min-height:60px;}
     <button class="btn btn-primary" onclick="startRecord('game')"><span class="ico">🏆</span>試合</button>
     <button class="btn" onclick="goPage('penta')"><span class="ico">📊</span>自己評価</button>
     <button class="btn" onclick="startScout()"><span class="ico">🔍</span>偵察</button>
+    <button class="btn" onclick="goPage('tactics')" style="grid-column:1/-1"><span class="ico">♟</span>戦術メモ — パターンを確認する</button>
   </div>
 </div>
 
@@ -220,6 +221,19 @@ textarea.input{resize:vertical;min-height:60px;}
   <button id="nav-settings" onclick="goPage('settings')"><span class="ic">⚙</span>設定</button>
 </div>
 
+<!-- 戦術メモ -->
+<div class="page" id="p-tactics">
+  <div id="tac-base-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+  <div id="tac-var-row" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+  <div id="tac-info" style="background:var(--panel);border-radius:10px;padding:10px 12px;margin-bottom:10px"></div>
+  <canvas id="tac-court" height="320" style="display:block;width:100%;border-radius:10px;border:1px solid #333"></canvas>
+  <div style="display:flex;gap:12px;margin-top:7px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--dim)"><span style="display:inline-block;width:20px;border-top:2px dashed #378ADD"></span>パス</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--dim)"><span style="display:inline-block;width:20px;border-top:2px solid #E24B4A"></span>動き</div>
+    <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--dim)"><span style="display:inline-block;width:20px;border-top:2px solid #1D9E75"></span>スクリーン</div>
+  </div>
+</div>
+
 <!-- モーダル -->
 <div class="modal" id="modal">
   <div class="mc">
@@ -230,6 +244,136 @@ textarea.input{resize:vertical;min-height:60px;}
   </div>
 </div>
 
+<script>
+// ============================================
+// 戦術メモ
+// ============================================
+const TAC_DATA = {
+  'パス&ラン': {
+    variants: [
+      { name:'基本型', desc:'パスして必ず動く基本。止まらないことがルール。', badges:[{cls:'#2E8B3E',t:'どのチームでも'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.83,'1','#378ADD');tP(ctx,W*.2,H*.55,'2','#378ADD');tP(ctx,W*.8,H*.55,'3','#378ADD');tP(ctx,W*.35,H*.28,'4','#1D9E75');tP(ctx,W*.65,H*.28,'5','#1D9E75');tDA(ctx,W*.5,H*.83,W*.2,H*.55,'#378ADD');tSA(ctx,W*.5,H*.83,W*.7,H*.62,'#E24B4A');tLB(ctx,W*.32,H*.67,'パス');tLB(ctx,W*.64,H*.72,'パス後に動く');}
+      },
+      { name:'逆サイド', desc:'相手が左に寄ったら逆サイドへパスするだけ。難しい技術ゼロ。', badges:[{cls:'#1E5FBF',t:'足速い子多い'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.83,'1','#378ADD');tP(ctx,W*.2,H*.55,'2','#888');tP(ctx,W*.8,H*.55,'3','#378ADD');tP(ctx,W*.35,H*.28,'4','#1D9E75');tP(ctx,W*.65,H*.28,'5','#1D9E75');tDA(ctx,W*.5,H*.83,W*.8,H*.55,'#378ADD');tSA(ctx,W*.8,H*.55,W*.62,H*.32,'#E24B4A');tLB(ctx,W*.7,H*.67,'逆へ！');}
+      },
+      { name:'タイミングずらし', desc:'同じ動きでカットのタイミングだけ遅らせる。相手が緩んだ瞬間を狙う。', badges:[{cls:'#854F0B',t:'読まれてきたとき'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.83,'1','#378ADD');tP(ctx,W*.2,H*.55,'2','#378ADD');tP(ctx,W*.8,H*.55,'3','#378ADD');tP(ctx,W*.35,H*.28,'4','#1D9E75');tP(ctx,W*.65,H*.28,'5','#1D9E75');tDA(ctx,W*.5,H*.83,W*.2,H*.55,'#378ADD');tSA(ctx,W*.2,H*.55,W*.22,H*.44,'#E24B4A');ctx.save();ctx.setLineDash([3,4]);ctx.strokeStyle='#E24B4A';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.22,H*.44);ctx.lineTo(W*.4,H*.3);ctx.stroke();ctx.setLineDash([]);ctx.restore();tAH(ctx,W*.22,H*.44,W*.4,H*.3,'#E24B4A');tLB(ctx,W*.12,H*.46,'フェイク');tLB(ctx,W*.28,H*.35,'一拍後！');}
+      }
+    ]
+  },
+  '3アウト2イン': {
+    variants: [
+      { name:'基本セット', desc:'外3人でボールを回しながら中2人がゴール下を確保。スペースを広く使う。', badges:[{cls:'#2E8B3E',t:'どのチームでも'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.83,'1','#378ADD');tP(ctx,W*.15,H*.52,'2','#378ADD');tP(ctx,W*.85,H*.52,'3','#378ADD');tP(ctx,W*.35,H*.25,'4','#1D9E75');tP(ctx,W*.65,H*.25,'5','#1D9E75');tDA(ctx,W*.5,H*.83,W*.15,H*.52,'#378ADD');tDA(ctx,W*.15,H*.52,W*.35,H*.25,'#1D9E75');tLB(ctx,W*.27,H*.65,'ボール回し');}
+      },
+      { name:'スクリーンあり', desc:'4番が2番のためにスクリーンを立ててカットコースを作る。', badges:[{cls:'#D32027',t:'体大きい子いる'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.83,'1','#378ADD');tP(ctx,W*.15,H*.52,'2','#378ADD');tP(ctx,W*.85,H*.52,'3','#378ADD');tP(ctx,W*.35,H*.25,'4','#1D9E75');tP(ctx,W*.65,H*.25,'5','#1D9E75');tDA(ctx,W*.5,H*.83,W*.15,H*.52,'#378ADD');tSA(ctx,W*.35,H*.25,W*.25,H*.38,'#1D9E75');tSA(ctx,W*.15,H*.52,W*.35,H*.3,'#E24B4A');tLB(ctx,W*.16,H*.43,'スクリーン');tLB(ctx,W*.3,H*.42,'カット');}
+      },
+      { name:'ポスト優先', desc:'5番がゴール下で先にポジションを取り、外からパスを入れる。', badges:[{cls:'#D32027',t:'大きい子を活かす'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.83,'1','#378ADD');tP(ctx,W*.15,H*.52,'2','#378ADD');tP(ctx,W*.85,H*.52,'3','#378ADD');tP(ctx,W*.35,H*.32,'4','#1D9E75');tP(ctx,W*.65,H*.25,'5','#1D9E75');tSA(ctx,W*.65,H*.25,W*.53,H*.18,'#1D9E75');tDA(ctx,W*.5,H*.83,W*.53,H*.18,'#378ADD');tLB(ctx,W*.7,H*.2,'先にポスト！');}
+      }
+    ]
+  },
+  'ファストブレイク': {
+    variants: [
+      { name:'2対1', desc:'2人で走って相手1人に数的有利で攻める。パスか自分かを判断。', badges:[{cls:'#1E5FBF',t:'足速い子2人'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.4,H*.75,'1','#378ADD');tP(ctx,W*.65,H*.72,'2','#378ADD');tP(ctx,W*.52,H*.35,'D','#E24B4A');tSA(ctx,W*.4,H*.75,W*.4,H*.3,'#378ADD');tSA(ctx,W*.65,H*.72,W*.65,H*.28,'#378ADD');tDA(ctx,W*.4,H*.5,W*.65,H*.45,'#378ADD');tLB(ctx,W*.28,H*.52,'走る！');tLB(ctx,W*.5,H*.56,'orパス');}
+      },
+      { name:'3対2', desc:'3人で走り中央が引きつけて左右に展開。判断力が求められる。', badges:[{cls:'#1E5FBF',t:'足速い子3人'},{cls:'#2E8B3E',t:'パス判断できる'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.8,'1','#378ADD');tP(ctx,W*.2,H*.7,'2','#378ADD');tP(ctx,W*.8,H*.7,'3','#378ADD');tP(ctx,W*.35,H*.38,'D1','#E24B4A');tP(ctx,W*.65,H*.38,'D2','#E24B4A');tSA(ctx,W*.5,H*.8,W*.5,H*.35,'#378ADD');tSA(ctx,W*.2,H*.7,W*.2,H*.32,'#378ADD');tSA(ctx,W*.8,H*.7,W*.8,H*.32,'#378ADD');tDA(ctx,W*.5,H*.5,W*.2,H*.42,'#378ADD');tLB(ctx,W*.5,H*.68,'全力で走る');}
+      }
+    ]
+  },
+  'スクリーン': {
+    variants: [
+      { name:'ピック&ロール', desc:'スクリーン後にゴール方向へロール。スクリーンした選手がそのまま受け手になる。', badges:[{cls:'#D32027',t:'体大きい子向け'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.75,'1','#378ADD');tP(ctx,W*.5,H*.48,'4','#1D9E75');tSA(ctx,W*.5,H*.48,W*.38,H*.6,'#1D9E75');tSA(ctx,W*.5,H*.75,W*.3,H*.55,'#378ADD');tSA(ctx,W*.38,H*.6,W*.38,H*.35,'#1D9E75');tDA(ctx,W*.5,H*.75,W*.38,H*.35,'#378ADD');tLB(ctx,W*.58,H*.55,'スクリーン');tLB(ctx,W*.26,H*.48,'ロール');}
+      },
+      { name:'スリップ', desc:'スクリーンに来ると見せかけてすぐゴール下へ切り込む。意表をつく。', badges:[{cls:'#1E5FBF',t:'動きが読める子'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.78,'1','#378ADD');tP(ctx,W*.5,H*.5,'4','#1D9E75');ctx.save();ctx.setLineDash([3,4]);ctx.strokeStyle='#1D9E75';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(W*.5,H*.5);ctx.lineTo(W*.38,H*.58);ctx.stroke();ctx.setLineDash([]);ctx.restore();tSA(ctx,W*.5,H*.5,W*.5,H*.22,'#1D9E75');tDA(ctx,W*.5,H*.78,W*.5,H*.22,'#378ADD');tLB(ctx,W*.28,H*.57,'フェイク');tLB(ctx,W*.58,H*.36,'スリップ！');}
+      }
+    ]
+  },
+  'ゾーンアタック': {
+    variants: [
+      { name:'コーナー攻撃', desc:'ゾーンの弱点コーナーにボールを入れて崩す。2-3ゾーンに特に有効。', badges:[{cls:'#534AB7',t:'シュート上手い子'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.83,'1','#378ADD');tP(ctx,W*.15,H*.55,'2','#378ADD');tP(ctx,W*.85,H*.55,'3','#378ADD');tP(ctx,W*.2,H*.25,'4','#1D9E75');tP(ctx,W*.65,H*.28,'5','#1D9E75');tDA(ctx,W*.5,H*.83,W*.85,H*.55,'#378ADD');tDA(ctx,W*.85,H*.55,W*.85,H*.32,'#378ADD');tLB(ctx,W*.72,H*.67,'逆サイドへ');tLB(ctx,W*.78,H*.42,'コーナー！');}
+      },
+      { name:'ハイロー', desc:'ハイポスト（フリースロー付近）とローポスト（ゴール下）の2人を使う。', badges:[{cls:'#D32027',t:'大きい子2人いる'}],
+        draw:(ctx,W,H)=>{tP(ctx,W*.5,H*.83,'1','#378ADD');tP(ctx,W*.15,H*.55,'2','#378ADD');tP(ctx,W*.85,H*.55,'3','#378ADD');tP(ctx,W*.5,H*.42,'4','#1D9E75');tP(ctx,W*.5,H*.2,'5','#1D9E75');tDA(ctx,W*.5,H*.83,W*.5,H*.42,'#1D9E75');tDA(ctx,W*.5,H*.42,W*.5,H*.2,'#1D9E75');tLB(ctx,W*.62,H*.62,'ハイポストへ');tLB(ctx,W*.62,H*.3,'ローへ落とす');}
+      }
+    ]
+  }
+};
+
+function tP(ctx,x,y,num,color){ctx.beginPath();ctx.arc(x,y,11,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 10px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(num,x,y);}
+function tDA(ctx,x1,y1,x2,y2,c){ctx.save();ctx.setLineDash([5,4]);ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.setLineDash([]);ctx.restore();tAH(ctx,x1,y1,x2,y2,c);}
+function tSA(ctx,x1,y1,x2,y2,c){ctx.save();ctx.strokeStyle=c;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();tAH(ctx,x1,y1,x2,y2,c);}
+function tAH(ctx,x1,y1,x2,y2,c){const a=Math.atan2(y2-y1,x2-x1),l=8;ctx.save();ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x2-l*Math.cos(a-.4),y2-l*Math.sin(a-.4));ctx.lineTo(x2,y2);ctx.lineTo(x2-l*Math.cos(a+.4),y2-l*Math.sin(a+.4));ctx.stroke();ctx.restore();}
+function tLB(ctx,x,y,text){ctx.save();ctx.font='9px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='rgba(255,255,255,0.45)';ctx.fillText(text,x,y);ctx.restore();}
+
+function drawTacCourt(ctx,W,H){
+  ctx.fillStyle='#0F1A2A';ctx.beginPath();ctx.roundRect(0,0,W,H,8);ctx.fill();
+  ctx.strokeStyle='#2a4a7a';ctx.lineWidth=1;
+  ctx.strokeRect(W*.05,H*.04,W*.9,H*.92);
+  ctx.beginPath();ctx.moveTo(W*.05,H*.5);ctx.lineTo(W*.95,H*.5);ctx.stroke();
+  ctx.beginPath();ctx.arc(W*.5,H*.04,W*.38,0,Math.PI);ctx.stroke();
+  ctx.strokeRect(W*.3,H*.04,W*.4,H*.26);
+  ctx.beginPath();ctx.arc(W*.5,H*.3,W*.12,0,Math.PI);ctx.stroke();
+  ctx.strokeStyle='#E24B4A';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(W*.5,H*.06,W*.03,0,Math.PI*2);ctx.stroke();
+}
+
+const TAC_KEYS = Object.keys(TAC_DATA);
+let tacBase = TAC_KEYS[0], tacVar = 0;
+
+function renderTactics(){
+  const bt = document.getElementById('tac-base-tabs');
+  bt.innerHTML = '';
+  TAC_KEYS.forEach(k => {
+    const b = document.createElement('button');
+    b.textContent = k;
+    b.style.cssText = `padding:6px 10px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid ${k===tacBase?'var(--gold)':'#444'};background:${k===tacBase?'rgba(255,200,58,0.15)':'var(--panel2)'};color:${k===tacBase?'var(--gold)':'var(--dim)'};font-weight:${k===tacBase?'bold':'normal'}`;
+    b.onclick = ()=>{ tacBase=k; tacVar=0; renderTactics(); };
+    bt.appendChild(b);
+  });
+
+  const variants = TAC_DATA[tacBase].variants;
+  const vr = document.getElementById('tac-var-row');
+  vr.innerHTML = '';
+  variants.forEach((v,i) => {
+    const b = document.createElement('button');
+    b.textContent = v.name;
+    b.style.cssText = `padding:5px 10px;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid ${i===tacVar?'#2E8B3E':'#333'};background:${i===tacVar?'rgba(46,139,62,0.2)':'var(--panel)'};color:${i===tacVar?'#66ff99':'var(--dim)'}`;
+    b.onclick = ()=>{ tacVar=i; renderTactics(); };
+    vr.appendChild(b);
+  });
+
+  const v = variants[tacVar];
+  const badges = v.badges.map(b=>`<span style="font-size:10px;padding:2px 8px;border-radius:99px;background:${b.cls}22;color:${b.cls};border:1px solid ${b.cls}55;margin-right:4px">${b.t}</span>`).join('');
+  document.getElementById('tac-info').innerHTML = `<div style="font-size:13px;font-weight:bold;color:var(--gold);margin-bottom:4px">${tacBase} — ${v.name}</div><div style="font-size:11px;color:#ccc;line-height:1.6;margin-bottom:6px">${v.desc}</div><div>${badges}</div>`;
+
+  const canvas = document.getElementById('tac-court');
+  const DPR = window.devicePixelRatio||1;
+  const W = canvas.offsetWidth||340, H = 320;
+  canvas.width = W*DPR; canvas.height = H*DPR; canvas.style.height = H+'px';
+  const ctx = canvas.getContext('2d'); ctx.scale(DPR,DPR);
+  drawTacCourt(ctx,W,H);
+  v.draw(ctx,W,H);
+}
+
+
+</script>
 <script src="dino_app.js"></script>
+<script>
+(function(){
+  const origGo = window.goPage;
+  window.goPage = function(p){
+    origGo(p);
+    if(p==='tactics') setTimeout(renderTactics,50);
+  };
+})();
+</script>
 </body>
 </html>
