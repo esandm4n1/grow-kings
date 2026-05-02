@@ -6,25 +6,84 @@
     <meta name="theme-color" content="#0A0A0A" />
     <meta name="description" content="Fukui Kings · 小学生プロ志望バスケ選手のための成長サポートアプリ" />
     <title>GROW · FUKUI KINGS</title>
-
-    <!-- PWA Manifest -->
     <link rel="manifest" href="./manifest.json" />
-
-    <!-- iOS PWA meta tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="GROW" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="./icon-192.png" />
     <script type="module" crossorigin src="./assets/index-BNg0DJea.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-C5s8qkv-.css">
+    <style>
+      /* 恐竜カードバナー */
+      #dino-banner {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 32px);
+        max-width: 448px;
+        z-index: 99999;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: linear-gradient(135deg, #1a0505, #0a0a1a);
+        border: 1.5px solid rgba(255, 200, 58, 0.7);
+        border-radius: 14px;
+        padding: 12px 16px;
+        color: #FFC83A;
+        font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+        box-shadow: 0 4px 20px rgba(255, 200, 58, 0.15);
+        -webkit-tap-highlight-color: transparent;
+        transition: all 0.15s;
+      }
+      #dino-banner:active {
+        transform: translateX(-50%) scale(0.97);
+      }
+      #dino-banner .dino-banner-icon {
+        font-size: 32px;
+        flex-shrink: 0;
+        line-height: 1;
+      }
+      #dino-banner .dino-banner-texts {
+        flex: 1;
+      }
+      #dino-banner .dino-banner-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: #FFC83A;
+        letter-spacing: 0.5px;
+      }
+      #dino-banner .dino-banner-sub {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+      }
+      #dino-banner .dino-banner-arrow {
+        font-size: 20px;
+        color: rgba(255, 200, 58, 0.6);
+        flex-shrink: 0;
+      }
+      /* 閉じるボタン */
+      #dino-banner-close {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        background: none;
+        border: none;
+        color: #555;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 2px 4px;
+        line-height: 1;
+        -webkit-tap-highlight-color: transparent;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
 
-    <!-- Register service worker for PWA (offline support) -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -33,25 +92,42 @@
           })
         })
       }
-      
-      // 恐竜モードボタンを生成・維持する関数
-      function ensureDinoButton() {
-        if (document.getElementById('dino-link')) return;
+
+      // 恐竜カードバナーを生成
+      function ensureDinoBanner() {
+        if (document.getElementById('dino-banner')) return;
+
+        // セッション中に閉じた場合は表示しない
+        if (sessionStorage.getItem('dino-banner-closed')) return;
+
         const a = document.createElement('a');
-        a.id = 'dino-link';
+        a.id = 'dino-banner';
         a.href = './dino.html';
-        a.title = '恐竜モード';
-        a.style.cssText = 'position:fixed;top:14px;right:54px;z-index:99999;width:32px;height:32px;border-radius:50%;background:rgba(255,200,58,0.15);border:1px solid rgba(255,200,58,0.4);display:flex;align-items:center;justify-content:center;text-decoration:none;-webkit-tap-highlight-color:transparent;backdrop-filter:blur(4px);transition:all 0.2s;';
-        a.innerHTML = '<span style="font-size:18px;line-height:1;">🦖</span>';
-        a.onmouseenter = () => { a.style.background = 'rgba(255,200,58,0.3)'; a.style.transform = 'scale(1.1)'; };
-        a.onmouseleave = () => { a.style.background = 'rgba(255,200,58,0.15)'; a.style.transform = 'scale(1)'; };
+        a.innerHTML = `
+          <span class="dino-banner-icon">🦖</span>
+          <div class="dino-banner-texts">
+            <div class="dino-banner-title">恐竜モードで遊ぶ</div>
+            <div class="dino-banner-sub">記録すると恐竜が育つ！タイプ判定あり</div>
+          </div>
+          <span class="dino-banner-arrow">›</span>
+          <button id="dino-banner-close" title="閉じる">✕</button>
+        `;
+
+        // 閉じるボタン
+        a.querySelector('#dino-banner-close').addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          sessionStorage.setItem('dino-banner-closed', '1');
+          const banner = document.getElementById('dino-banner');
+          if (banner) banner.remove();
+        });
+
         document.body.appendChild(a);
       }
-      
-      // 初回 + Reactの再レンダリングに対応するため定期的にチェック
+
       window.addEventListener('load', () => {
-        ensureDinoButton();
-        setInterval(ensureDinoButton, 1000);
+        // Reactのマウント完了を少し待ってから挿入
+        setTimeout(ensureDinoBanner, 800);
       });
     </script>
   </body>

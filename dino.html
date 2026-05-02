@@ -101,6 +101,28 @@ textarea.input{resize:vertical;min-height:60px;}
 .crown-rank img{width:32px;height:32px;image-rendering:pixelated;}
 .crown-rank .label{font-size:11px;color:var(--gold);}
 .tip{background:rgba(255,200,58,.08);border-left:3px solid var(--gold);padding:8px 10px;border-radius:4px;font-size:12px;color:#ddd;margin-top:8px;line-height:1.5;}
+
+/* ▼ GROWへ戻るバナー（改善版） */
+.back-banner{
+  display:flex;align-items:center;gap:10px;
+  margin:12px 14px 0;
+  background:linear-gradient(135deg,#1a1a2a,#0a0a1a);
+  border:1px solid rgba(255,200,58,0.5);
+  border-radius:12px;
+  padding:11px 14px;
+  text-decoration:none;
+  color:var(--gold);
+  font-size:13px;
+  font-weight:bold;
+  -webkit-tap-highlight-color:transparent;
+  transition:all 0.15s;
+}
+.back-banner:active{transform:scale(.97);background:#1a1a3a;}
+.back-banner .back-icon{font-size:24px;flex-shrink:0;}
+.back-banner .back-texts{}
+.back-banner .back-title{font-size:13px;color:var(--gold);font-weight:bold;}
+.back-banner .back-sub{font-size:10px;color:var(--dim);margin-top:1px;}
+.back-banner .back-arrow{margin-left:auto;font-size:18px;color:rgba(255,200,58,0.5);}
 </style>
 </head>
 <body>
@@ -109,6 +131,16 @@ textarea.input{resize:vertical;min-height:60px;}
   <h1>🦖 DINO · FUKUI KINGS</h1>
   <div class="sub">NEVER GIVE UP</div>
 </div>
+
+<!-- ▼ GROWへ戻るバナー（目立つ位置・カード型） -->
+<a href="./" class="back-banner">
+  <span class="back-icon">🏀</span>
+  <div class="back-texts">
+    <div class="back-title">GROWへもどる</div>
+    <div class="back-sub">練習記録・のびのグラフはこちら</div>
+  </div>
+  <span class="back-arrow">›</span>
+</a>
 
 <!-- メイン -->
 <div class="page active" id="p-main">
@@ -197,10 +229,6 @@ textarea.input{resize:vertical;min-height:60px;}
     <button onclick="closeModal()">OK!</button>
   </div>
 </div>
-
-<a href="./" id="back-grow" style="position:fixed;left:12px;top:14px;z-index:9999;background:rgba(0,0,0,0.6);border:1px solid #555;color:#FFC83A;padding:5px 10px;border-radius:14px;text-decoration:none;font-size:11px;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;">
-<span>🏀</span><span>GROWへ</span>
-</a>
 
 <script src="dino_app.js"></script>
 </body>
